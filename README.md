@@ -21,7 +21,11 @@ python3 main.py
 ```
 
 This copies `entry.png` to `$MAKEFUN_OUTPUT_DIR/entry.png`, or to
-`/output/entry.png` when the environment variable is not set.
+`/output/entry.png` when the environment variable is not set. Before
+copying, the program checks that the bundled file starts with the PNG
+signature and is at most 1,048,576 bytes; the copy itself is written to
+a temporary file in the output directory and then renamed into place,
+so the output is always byte-identical to the bundled poster.
 
 ## Rebuilding the poster
 
