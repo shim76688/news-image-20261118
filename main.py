@@ -7,7 +7,6 @@ Standard library only, no network access.
 
 import os
 import sys
-import tempfile
 
 MAX_BYTES = 1_048_576
 PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
@@ -27,31 +26,16 @@ def load_entry(source):
     return data
 
 
-def write_atomically(out_dir, target, data):
-    """Write via a temp file in the same directory, then rename over the
-    target, so a reader never sees a half-written poster and the bytes on
-    disk are exactly the bundled bytes."""
-    fd, tmp_path = tempfile.mkstemp(dir=out_dir, prefix=".entry-", suffix=".tmp")
-    try:
-        with os.fdopen(fd, "wb") as handle:
-            handle.write(data)
-        os.replace(tmp_path, target)
-    except BaseException:
-        try:
-            os.unlink(tmp_path)
-        except OSError:
-            pass
-        raise
-
-
 def main() -> int:
     here = os.path.dirname(os.path.abspath(__file__))
     source = os.path.join(here, "entry.png")
+    data = load_entry(source)
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     target = os.path.join(out_dir, "entry.png")
-    data = load_entry(source)
-    write_atomically(out_dir, target, data)
+    with open(target, "wb") as handle:
+        handle.write(data)
+    os.chmod(target, 0o644)
     return 0
 
 
