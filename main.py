@@ -6,10 +6,42 @@ Standard library only, no network access.
 """
 
 import os
-import shutil
 import sys
+import tempfile
 
 MAX_BYTES = 1_048_576
+PNG_SIGNATURE = b"\x89PNG\r\n\x1a\n"
+
+
+def load_entry(source):
+    """Read the bundled poster and check it is a PNG within the size cap."""
+    with open(source, "rb") as handle:
+        data = handle.read()
+    if not data.startswith(PNG_SIGNATURE):
+        raise ValueError("entry.png does not start with the PNG signature")
+    if len(data) > MAX_BYTES:
+        raise ValueError(
+            "entry.png is %d bytes, over the %d byte limit"
+            % (len(data), MAX_BYTES)
+        )
+    return data
+
+
+def write_atomically(out_dir, target, data):
+    """Write via a temp file in the same directory, then rename over the
+    target, so a reader never sees a half-written poster and the bytes on
+    disk are exactly the bundled bytes."""
+    fd, tmp_path = tempfile.mkstemp(dir=out_dir, prefix=".entry-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+        os.replace(tmp_path, target)
+    except BaseException:
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        raise
 
 
 def main() -> int:
@@ -18,7 +50,8 @@ def main() -> int:
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
     os.makedirs(out_dir, exist_ok=True)
     target = os.path.join(out_dir, "entry.png")
-    shutil.copyfile(source, target)
+    data = load_entry(source)
+    write_atomically(out_dir, target, data)
     return 0
 
 

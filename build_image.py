@@ -75,14 +75,19 @@ def centered(draw, cx, y, text, fnt, fill):
 
 def icon_skyline(draw, x, y, w, h):
     base = y + h - 6
-    draw.arc([x + w - 120, y - 6, x + w + 30, y + 74], 180, 330, fill=RED, width=4)
     buildings = [(0, 34, 26), (32, 52, 30), (68, 40, 24), (98, 60, 30), (134, 44, 26)]
     for bx, bh, bw in buildings:
         draw.rectangle([x + bx, base - bh, x + bx + bw, base], fill=BLACK)
         for wy in range(base - bh + 7, base - 8, 11):
             draw.rectangle([x + bx + 6, wy, x + bx + 11, wy + 5], fill=PAPER)
             draw.rectangle([x + bx + 15, wy, x + bx + 20, wy + 5], fill=PAPER)
-    draw.line([x, base, x + w - 90, base], fill=BLACK, width=3)
+    draw.line([x, base, x + 168, base], fill=BLACK, width=3)
+    # Small globe beside the towers: circle, equator and two meridians.
+    gx, gy, gr = x + 196, y + 26, 24
+    draw.ellipse([gx - gr, gy - gr, gx + gr, gy + gr], outline=RED, width=4)
+    draw.line([gx - gr, gy, gx + gr, gy], fill=RED, width=3)
+    draw.ellipse([gx - 10, gy - gr, gx + 10, gy + gr], outline=RED, width=3)
+    draw.line([gx, gy + gr, gx, base], fill=RED, width=3)
 
 
 def icon_pennants(draw, x, y, w, h):
@@ -98,18 +103,32 @@ def icon_pennants(draw, x, y, w, h):
 
 
 def icon_bridge(draw, x, y, w, h):
-    deck = y + h - 22
-    for tx in (x + 26, x + 150):
-        draw.rectangle([tx, y + 8, tx + 12, deck], fill=BLACK)
-    draw.line([x + 6, y + 10, x + 226, y + 10], fill=BLACK, width=3)
-    draw.line([x + 6, deck - 16, x + 96, deck - 16], fill=BLACK, width=5)
-    draw.line([x + 140, deck - 26, x + 226, deck - 16], fill=BLACK, width=5)
+    """Suspension bridge with a broken span: two towers, a sagging main
+    cable, a deck in two pieces with a clear gap, and one fallen segment
+    tilted down into the water."""
+    deck = y + h - 20
+    top = y + 4
+    towers = (x + 52, x + 168)
+    for tx in towers:
+        draw.rectangle([tx, top, tx + 10, deck], fill=BLACK)
+    # Main cable: shore to tower top, sag between towers, down to shore.
+    draw.line([x + 4, deck - 12, towers[0] + 5, top], fill=BLACK, width=3)
+    draw.arc([towers[0] - 30, top - 6, towers[1] + 40, top + 62],
+             20, 160, fill=BLACK, width=3)
+    draw.line([towers[1] + 5, top, x + 228, deck - 12], fill=BLACK, width=3)
+    for sx in range(x + 66, x + 168, 24):
+        draw.line([sx, top + 30, sx, deck - 6], fill=BLACK, width=2)
+    # Deck: left piece ends mid-span, right piece starts lower after a gap.
+    draw.line([x + 4, deck, x + 104, deck], fill=BLACK, width=6)
+    draw.line([x + 138, deck - 4, x + 228, deck - 4], fill=BLACK, width=6)
+    # Fallen segment, tilted from the gap down toward the water.
     draw.polygon(
-        [(x + 100, deck - 16), (x + 136, deck - 27), (x + 132, deck - 8)],
+        [(x + 106, deck - 2), (x + 136, deck - 6), (x + 142, deck + 8),
+         (x + 114, deck + 11)],
         fill=RED,
     )
-    for wx in range(x + 8, x + 220, 36):
-        draw.arc([wx, deck + 2, wx + 22, deck + 13], 0, 180, fill=NAVY, width=3)
+    for wx in range(x + 8, x + 216, 36):
+        draw.arc([wx, deck + 6, wx + 22, deck + 16], 0, 180, fill=NAVY, width=3)
 
 
 def icon_drone(draw, x, y, w, h):
@@ -141,11 +160,13 @@ def icon_chip(draw, x, y, w, h):
 
 
 def icon_cyclone(draw, x, y, w, h):
+    # Kept inside the icon box (radius 30 in a 62px tall box) so the
+    # spiral never crowds the headline below it.
     cx, cy = x + 116, y + h // 2
-    for r, start in ((52, 20), (40, 140), (28, 260), (16, 60)):
+    for r, start in ((30, 20), (23, 140), (16, 260), (9, 60)):
         draw.arc([cx - r, cy - r, cx + r, cy + r], start, start + 250,
-                 fill=NAVY, width=6)
-    draw.ellipse([cx - 6, cy - 6, cx + 6, cy + 6], fill=RED)
+                 fill=NAVY, width=5)
+    draw.ellipse([cx - 4, cy - 4, cx + 4, cy + 4], fill=RED)
 
 
 ICONS = [icon_skyline, icon_pennants, icon_bridge, icon_drone, icon_chip,
